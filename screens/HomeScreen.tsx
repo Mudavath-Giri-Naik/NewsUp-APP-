@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import LottieView from 'lottie-react-native';
 import Header from '../components/Header';
 import CategoryChips from '../components/CategoryChips';
@@ -15,7 +16,7 @@ import {
 } from '../utils/api';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList  } from '../utils/types';
+import { RootStackParamList } from '../utils/types';
 
 type CategoryType = { category: string; count: number };
 type ArticleType = { id: string; title: string };
@@ -69,32 +70,29 @@ const HomeScreen = () => {
   const loadArticles = async () => {
     try {
       setLoading(true);
-  
+
       const category = selectedCategory === "All" ? "all" : selectedCategory;
       let res;
-  
+
       if (paper === "All") {
-        // ✅ Load from all newspapers by secondCategory
         res = category === "all"
-          ? { data: [] } // optional: you can handle global 'all' differently if needed
+          ? { data: [] }
           : await fetchTitlesBySecondCategoryAll(category);
       } else if (paper === "Exam") {
-        // ✅ Use secondCategory routes for Exam
         res = category === "all"
           ? await fetchAllArticles(paper)
           : await fetchTitlesBySecondCategory(paper, category);
       } else {
-        // ✅ Regular papers use main category routes
         res = category === "all"
           ? await fetchAllArticles(paper)
           : await fetchTitles(paper, category);
       }
-  
+
       const formatted: ArticleType[] = res.data.map((a: any) => ({
         id: a.articleId?.toString() || a._id?.toString() || Math.random().toString(),
         title: a.title,
       }));
-  
+
       setArticles(formatted);
     } catch (err) {
       console.error("Failed to load articles:", err);
@@ -118,7 +116,7 @@ const HomeScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Header />
       {loading ? (
         <View style={styles.loaderContainer}>
@@ -144,7 +142,7 @@ const HomeScreen = () => {
         </>
       )}
       <BottomNavbar selected={paper} onSelect={setPaper} />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -153,7 +151,6 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 0,
     backgroundColor: '#fff',
   },
   loaderContainer: {
