@@ -1,5 +1,7 @@
+// src/screens/HomeScreen.tsx
+
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LottieView from 'lottie-react-native';
 import Header from '../components/Header';
@@ -9,14 +11,14 @@ import BottomNavbar from '../components/BottomNavbar';
 import {
   fetchCategories,
   fetchSecondCategories,
-  fetchTitles,
   fetchTitlesBySecondCategory,
-  fetchAllArticles,
   fetchTitlesBySecondCategoryAll,
+  fetchArticlesByPaperAndDate,
 } from '../utils/api';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../utils/types';
+import { RootStackParamList } from '../utils/types'; // Make sure types are imported
+import axios from 'axios';
 
 type CategoryType = { category: string; count: number };
 type ArticleType = { id: string; title: string };
@@ -29,10 +31,18 @@ const HomeScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [articles, setArticles] = useState<ArticleType[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
+
+  const formatDateForAPI = (date: Date) => {
+    const dd = String(date.getDate()).padStart(2, '0');
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const yyyy = date.getFullYear();
+    return `${dd}-${mm}-${yyyy}`;
+  };
 
   const loadCategories = async () => {
     try {
@@ -70,32 +80,48 @@ const HomeScreen = () => {
   const loadArticles = async () => {
     try {
       setLoading(true);
+      setArticles([]); // Clear old data before loading new
 
-      const category = selectedCategory === "All" ? "all" : selectedCategory;
+      const category = selectedCategory === 'All' ? 'all' : selectedCategory;
       let res;
 
-      if (paper === "All") {
-        res = category === "all"
+      const formattedDate = formatDateForAPI(selectedDate);
+
+      if (paper === 'All') {
+        res = category === 'all'
           ? { data: [] }
           : await fetchTitlesBySecondCategoryAll(category);
-      } else if (paper === "Exam") {
-        res = category === "all"
-          ? await fetchAllArticles(paper)
-          : await fetchTitlesBySecondCategory(paper, category);
       } else {
-        res = category === "all"
-          ? await fetchAllArticles(paper)
-          : await fetchTitles(paper, category);
+        try {
+          const response = await fetchArticlesByPaperAndDate(paper, formattedDate);
+          const allArticles: any[] = response.data;
+
+          const filteredArticles =
+            category === 'all'
+              ? allArticles
+              : allArticles.filter((a) => a.category === category);
+
+          res = { data: filteredArticles };
+        } catch (err: any) {
+          if (axios.isAxiosError(err) && err.response?.status === 404) {
+            res = { data: [] }; // Gracefully handle no data
+          } else {
+            throw err; // Unexpected error — let it be handled
+          }
+        }
       }
 
-      const formatted: ArticleType[] = res.data.map((a: any) => ({
-        id: a.articleId?.toString() || a._id?.toString() || Math.random().toString(),
-        title: a.title,
-      }));
-
-      setArticles(formatted);
+      if (!res || res.data.length === 0) {
+        setArticles([]);
+      } else {
+        const formatted: ArticleType[] = res.data.map((a: any) => ({
+          id: a.articleId?.toString() || a._id?.toString() || Math.random().toString(),
+          title: a.title,
+        }));
+        setArticles(formatted);
+      }
     } catch (err) {
-      console.error("Failed to load articles:", err);
+      Alert.alert('Error', 'Something went wrong while loading articles');
     } finally {
       setLoading(false);
     }
@@ -109,15 +135,16 @@ const HomeScreen = () => {
     if (categories.length > 0) {
       loadArticles();
     }
-  }, [selectedCategory, categories]);
+  }, [selectedCategory, categories, selectedDate]);
 
   const handleArticlePress = (id: string) => {
-    navigation.navigate('ArticleDetail', { id, paper });
+    // Update navigation to pass 'selectedDate' along with 'id' and 'paper'
+    navigation.navigate('ArticleDetail', { id, paper, date: selectedDate.toString() });
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header />
+      <Header setSelectedDate={setSelectedDate} />
       {loading ? (
         <View style={styles.loaderContainer}>
           <LottieView
@@ -126,6 +153,10 @@ const HomeScreen = () => {
             loop
             style={{ width: 150, height: 150 }}
           />
+        </View>
+      ) : articles.length === 0 ? (
+        <View style={styles.noDataContainer}>
+          <Text style={styles.noDataText}>No data available for selected date</Text>
         </View>
       ) : (
         <>
@@ -157,5 +188,15 @@ const styles = StyleSheet.create({
     marginTop: 250,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  noDataContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  noDataText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'gray',
   },
 });

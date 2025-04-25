@@ -1,3 +1,5 @@
+// File: App.tsx
+
 import React from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -16,8 +18,8 @@ const LightTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    background: '#ffffff', // Light background
-    text: '#000000',        // Dark text
+    background: '#ffffff',
+    text: '#000000',
   },
 };
 
@@ -27,18 +29,15 @@ export default function App() {
   return (
     <NavigationContainer theme={LightTheme}>
       <Stack.Navigator initialRouteName="Welcome">
-        {/* ✅ ADDED: Welcome screen as the initial route */}
         <Stack.Screen
           name="Welcome"
           component={WelcomeScreen}
           options={{ headerShown: false }}
         />
-
-        {/* Existing screens */}
         <Stack.Screen
           name="Home"
           component={HomeScreen}
-          options={{ headerShown: false }} // Already handled inside HomeScreen
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="ArticleDetail"

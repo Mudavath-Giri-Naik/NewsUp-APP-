@@ -7,7 +7,7 @@ type Article = {
 };
 
 type Props = {
-  articles: Article[];
+  articles: Article[]; // No change here
   onSelect: (id: string) => void;
   source: string;
 };
@@ -29,6 +29,11 @@ const ArticleList: React.FC<Props> = ({ articles, onSelect, source }) => {
           <Text style={styles.subtitle}>({source})</Text>
         </TouchableOpacity>
       )}
+      ListEmptyComponent={
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No articles available for this date.</Text>
+        </View>
+      }
     />
   );
 };
@@ -51,5 +56,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#666',
     marginTop: 4,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 50,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#888',
+    textAlign: 'center',
   },
 });

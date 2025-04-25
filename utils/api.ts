@@ -41,3 +41,9 @@ export const fetchTitlesBySecondCategory = (paper: string, secondCategory: strin
 // ✅ 9. Get titles by secondCategory across all newspapers
 export const fetchTitlesBySecondCategoryAll = (secondCategory: string) =>
   axios.get(`${BASE_URL}/api/articles/titles/secondCategory/all/${encodeURIComponent(secondCategory)}`);
+// ✅ 10. Get all articles by date across selected newspapers
+export const fetchArticlesByDate = (date: string) =>
+  axios.get(`${BASE_URL}/api/articles/by-date/${encodeURIComponent(date)}`);
+// ✅ 11. Get articles for a specific newspaper and date
+export const fetchArticlesByPaperAndDate = (paper: string, date: string) =>
+  axios.get(`${BASE_URL}/api/articles/${encodeURIComponent(paper)}/by-date/${encodeURIComponent(date)}`);

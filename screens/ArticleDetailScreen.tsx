@@ -1,3 +1,5 @@
+// File: screens/ArticleDetailScreen.tsx
+
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import {
   View,
@@ -14,10 +16,9 @@ import LottieView from 'lottie-react-native';
 const { width } = Dimensions.get('window');
 
 const ArticleDetailScreen = ({ route, navigation }: any) => {
-  const { paper, id } = route.params;
+  const { paper, id, date } = route.params;
   const [article, setArticle] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [currentDate, setCurrentDate] = useState<string>('');
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -38,26 +39,19 @@ const ArticleDetailScreen = ({ route, navigation }: any) => {
         const res = await fetchArticleDetails(paper, id);
         setArticle(res.data);
       } catch (err) {
-        console.error("Error loading article details", err);
+        console.error("Error loading article details:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    loadDetails();
-
-    const getCurrentDate = () => {
-      const today = new Date();
-      const options: Intl.DateTimeFormatOptions = {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-      };
-      setCurrentDate(today.toLocaleDateString('en-GB', options));
-    };
-
-    getCurrentDate();
-  }, []);
+    if (paper && id) {
+      loadDetails();
+    } else {
+      console.error("Paper or ID is missing in the route params.");
+      setLoading(false); // If there's an issue with the params, stop loading
+    }
+  }, [paper, id]);
 
   const formatToList = (text: string) =>
     text
@@ -104,13 +98,20 @@ const ArticleDetailScreen = ({ route, navigation }: any) => {
     );
   }
 
+  // Format the date (assuming it's a Date object)
+  const formattedDate = new Date(date).toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>{article.title}</Text>
 
       <View style={styles.metaInfo}>
         <View style={styles.leftInfo}>
-          <Text style={styles.date}>{currentDate}</Text>
+          <Text style={styles.date}>{formattedDate}</Text>
           {article.category && (
             <>
               <Text style={styles.separator}> | </Text>
@@ -128,7 +129,6 @@ const ArticleDetailScreen = ({ route, navigation }: any) => {
         </View>
       </View>
 
-      {/* Divider after meta info */}
       <View style={styles.divider} />
 
       {article.involvement && (
