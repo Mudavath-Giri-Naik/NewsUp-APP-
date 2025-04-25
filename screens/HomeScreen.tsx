@@ -190,7 +190,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   noDataContainer: {
-    flex: 1,
+    
+    marginTop: 300,
     alignItems: 'center',
     justifyContent: 'center',
   },

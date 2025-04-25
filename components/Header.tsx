@@ -32,19 +32,25 @@ const Header = ({ setSelectedDate }: HeaderProps) => {
 
   return (
     <View style={styles.container}>
+      {/* Left: Calendar Icon */}
       <TouchableOpacity onPress={() => setShowPicker(true)} style={styles.dateSection}>
-        <Ionicons name="calendar-outline" size={30} color="black" />
-        <Text style={styles.dateText}>{formatDate(date)}</Text>
+        <Ionicons name="calendar-sharp" size={30} color="black" />
       </TouchableOpacity>
 
-      <Text style={styles.title}>
-        News<Text style={{ color: 'red' }}>Up</Text>
-      </Text>
+      {/* Middle: App Name and Date */}
+      <View style={styles.middleContainer}>
+        <Text style={styles.title}>
+          News<Text style={{ color: 'red' }}>Up</Text>
+        </Text>
+        <Text style={styles.dateText}>{formatDate(date)}</Text>
+      </View>
 
+      {/* Right: Profile Icon */}
       <TouchableOpacity>
         <Ionicons name="person-circle-outline" size={40} color="black" />
       </TouchableOpacity>
 
+      {/* DateTimePicker */}
       {showPicker && (
         <DateTimePicker
           value={date}
@@ -62,29 +68,32 @@ export default Header;
 
 const styles = StyleSheet.create({
   container: {
-    height: 60,
+    height: 80, // Increased to give space for date below the title
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: 2,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: '#fff',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
   },
   title: {
     fontSize: 25,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
   dateSection: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   dateText: {
-    marginLeft: 6,
     fontSize: 16,
     fontWeight: '600',
+    textAlign: 'center',
+    marginTop: 4, // Space between title and date
+  },
+  middleContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
