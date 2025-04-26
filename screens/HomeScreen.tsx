@@ -90,7 +90,16 @@ const HomeScreen = () => {
       let allFetchedArticles: any[] = [];
 
       if (paper === 'Exam') {
-        const papersToFetch = ['The Hindu', 'Indian Express', 'Times of India'];
+        const papersToFetch = [
+          'The Hindu',
+          'Times of India',
+          'Hindustan Times',
+          'Exam',
+          'Indian Express',
+          'Economic Times',
+          'Bussiness Standard',
+        ];
+        
         const fetchPromises = papersToFetch.map(async (p) => {
           try {
             const response = await fetchArticlesByPaperAndDate(p, formattedDate);
