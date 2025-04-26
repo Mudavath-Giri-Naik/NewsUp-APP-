@@ -1,3 +1,5 @@
+// src/components/ArticleList.tsx
+
 import React from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
 
@@ -7,7 +9,7 @@ type Article = {
 };
 
 type Props = {
-  articles: Article[]; // No change here
+  articles: Article[];
   onSelect: (id: string) => void;
   source: string;
 };
@@ -17,7 +19,7 @@ const ArticleList: React.FC<Props> = ({ articles, onSelect, source }) => {
     <FlatList
       data={articles}
       keyExtractor={(item) => item.id}
-      contentContainerStyle={{ paddingBottom: 80 }}
+      contentContainerStyle={styles.container} // 👈 applied container style
       renderItem={({ item, index }) => (
         <TouchableOpacity
           onPress={() => onSelect(item.id)}
@@ -41,6 +43,11 @@ const ArticleList: React.FC<Props> = ({ articles, onSelect, source }) => {
 export default ArticleList;
 
 const styles = StyleSheet.create({
+  container: {
+    marginTop: 0,        // 👈 start from top always
+    paddingTop: 0,      // 👈 small breathing space from top
+    paddingBottom: 640,  // 👈 for scroll bottom breathing
+  },
   item: {
     paddingVertical: 10,
     paddingHorizontal: 10,

@@ -1,7 +1,5 @@
-// src/components/Header.tsx
-
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
@@ -27,30 +25,28 @@ const Header = ({ setSelectedDate }: HeaderProps) => {
       month: 'short',
       year: 'numeric',
     };
-    return d.toLocaleDateString('en-GB', options); // e.g., 25 Apr 2025
+    return d.toLocaleDateString('en-GB', options);
   };
 
   return (
-    <View style={styles.container}>
-      {/* Left: Calendar Icon */}
-      <TouchableOpacity onPress={() => setShowPicker(true)} style={styles.dateSection}>
-        <Ionicons name="calendar-sharp" size={30} color="black" />
-      </TouchableOpacity>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <TouchableOpacity onPress={() => setShowPicker(true)} style={styles.dateSection}>
+          <Ionicons name="calendar" size={35} color="black" />
+        </TouchableOpacity>
 
-      {/* Middle: App Name and Date */}
-      <View style={styles.middleContainer}>
-        <Text style={styles.title}>
-          News<Text style={{ color: 'red' }}>Up</Text>
-        </Text>
-        <Text style={styles.dateText}>{formatDate(date)}</Text>
+        <View style={styles.middleContainer}>
+          <Text style={styles.title}>
+            News<Text style={{ color: 'red' }}>Up</Text>
+          </Text>
+          <Text style={styles.dateText}>{formatDate(date)}</Text>
+        </View>
+
+        <TouchableOpacity>
+          <Ionicons name="person-circle-outline" size={45} color="black" />
+        </TouchableOpacity>
       </View>
 
-      {/* Right: Profile Icon */}
-      <TouchableOpacity>
-        <Ionicons name="person-circle-outline" size={40} color="black" />
-      </TouchableOpacity>
-
-      {/* DateTimePicker */}
       {showPicker && (
         <DateTimePicker
           value={date}
@@ -60,24 +56,33 @@ const Header = ({ setSelectedDate }: HeaderProps) => {
           maximumDate={new Date()}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 
 export default Header;
 
 const styles = StyleSheet.create({
+  safeArea: {
+    backgroundColor: '#fff',
+  },
   container: {
-    height: 80, // Increased to give space for date below the title
+    height: 80,
     paddingHorizontal: 20,
     paddingTop: 2,
+    paddingBottom: 8,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: '#fff',
+  
+    // Remove elevation and add bottom border
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 0, 0, 0.1)', // light black with opacity for thin line
   },
+  
   title: {
-    fontSize: 25,
+    fontSize: 28,
     fontWeight: 'bold',
     textAlign: 'center',
   },
@@ -89,7 +94,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
-    marginTop: 4, // Space between title and date
+    marginTop: 4,
   },
   middleContainer: {
     flex: 1,

@@ -1,17 +1,20 @@
 import React from 'react';
-import { TouchableOpacity, Image, StyleSheet, View, Dimensions } from 'react-native';
+import { TouchableOpacity, Image, StyleSheet, View, Dimensions, ScrollView } from 'react-native';
 
 type Props = {
   selected: string;
   onSelect: (paper: string) => void;
 };
-//this is where actual things will start it will checks key = collection name in DailyNews Database
+
+// Paper list - order will be maintained
 const papers = [
   { key: 'The Hindu', logo: require('../assets/logos/th.png') },
   { key: 'Times of India', logo: require('../assets/logos/toi.png') },
-  { key: 'Exam', logo: require('../assets/logos/pib.jpg') },
   { key: 'Hindustan Times', logo: require('../assets/logos/ht.jpg') },
+  { key: 'Exam', logo: require('../assets/logos/pib.jpg') },
   { key: 'Indian Express', logo: require('../assets/logos/ie.jpg') },
+  { key: 'Economic Times', logo: require('../assets/logos/et.png') },
+  { key: 'Bussiness Standard', logo: require('../assets/logos/bs.png') },
 ];
 
 const BottomNavbar: React.FC<Props> = ({ selected, onSelect }) => {
@@ -22,26 +25,32 @@ const BottomNavbar: React.FC<Props> = ({ selected, onSelect }) => {
 
       {/* Actual Navbar on top */}
       <View style={styles.container}>
-        {papers.map((paper) => (
-          <TouchableOpacity
-            key={paper.key}
-            onPress={() => onSelect(paper.key)}
-            style={styles.iconWrapper}
-          >
-            <View
-              style={[
-                styles.iconContainer,
-                selected === paper.key && styles.selectedIcon,
-              ]}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContainer}
+        >
+          {papers.map((paper) => (
+            <TouchableOpacity
+              key={paper.key}
+              onPress={() => onSelect(paper.key)}
+              style={styles.iconWrapper}
             >
-              <Image
-                source={paper.logo}
-                style={styles.icon}
-                resizeMode="cover"
-              />
-            </View>
-          </TouchableOpacity>
-        ))}
+              <View
+                style={[
+                  styles.iconContainer,
+                  selected === paper.key && styles.selectedIcon,
+                ]}
+              >
+                <Image
+                  source={paper.logo}
+                  style={styles.icon}
+                  resizeMode="cover"
+                />
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
     </View>
   );
@@ -79,6 +88,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     zIndex: 1,
+  },
+  scrollContainer: {
+    alignItems: 'center',
+    paddingHorizontal: 5,
   },
   iconWrapper: {
     marginHorizontal: 5,

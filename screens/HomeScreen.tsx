@@ -9,19 +9,15 @@ import CategoryChips from '../components/CategoryChips';
 import ArticleList from '../components/ArticleList';
 import BottomNavbar from '../components/BottomNavbar';
 import {
-  fetchCategories,
-  fetchSecondCategories,
-  fetchTitlesBySecondCategory,
-  fetchTitlesBySecondCategoryAll,
   fetchArticlesByPaperAndDate,
 } from '../utils/api';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../utils/types'; // Make sure types are imported
+import { RootStackParamList } from '../utils/types';
 import axios from 'axios';
 
 type CategoryType = { category: string; count: number };
-type ArticleType = { id: string; title: string };
+type ArticleType = { id: string; title: string; category: string };
 
 const HomeScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -44,101 +40,82 @@ const HomeScreen = () => {
     return `${dd}-${mm}-${yyyy}`;
   };
 
-  const loadCategories = async () => {
+  const loadArticlesAndCategories = async () => {
     try {
       setLoading(true);
-
-      const res =
-        paper === 'Exam'
-          ? await fetchSecondCategories(paper)
-          : await fetchCategories(paper);
-
-      const formattedCategories: CategoryType[] = res.data.map((item: any) => ({
-        category: item._id || 'Unknown',
-        count: item.count,
-      }));
-
-      const allCount = formattedCategories.reduce(
-        (acc: number, c: CategoryType) => acc + c.count,
-        0
-      );
-
-      const sortedCategories = formattedCategories.sort(
-        (a: CategoryType, b: CategoryType) => b.count - a.count
-      );
-
-      setCategories([{ category: 'All', count: allCount }, ...sortedCategories]);
-      setSelectedCategory('All');
-    } catch (err) {
-      console.error(err);
-      Alert.alert('Error', 'Failed to load categories');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadArticles = async () => {
-    try {
-      setLoading(true);
-      setArticles([]); // Clear old data before loading new
-
-      const category = selectedCategory === 'All' ? 'all' : selectedCategory;
-      let res;
+      setArticles([]);
+      setCategories([]);
 
       const formattedDate = formatDateForAPI(selectedDate);
+      let res;
 
       if (paper === 'All') {
-        res = category === 'all'
-          ? { data: [] }
-          : await fetchTitlesBySecondCategoryAll(category);
+        res = { data: [] };
       } else {
         try {
           const response = await fetchArticlesByPaperAndDate(paper, formattedDate);
-          const allArticles: any[] = response.data;
-
-          const filteredArticles =
-            category === 'all'
-              ? allArticles
-              : allArticles.filter((a) => a.category === category);
-
-          res = { data: filteredArticles };
+          res = { data: response.data };
         } catch (err: any) {
           if (axios.isAxiosError(err) && err.response?.status === 404) {
-            res = { data: [] }; // Gracefully handle no data
+            res = { data: [] };
           } else {
-            throw err; // Unexpected error — let it be handled
+            throw err;
           }
         }
       }
 
-      if (!res || res.data.length === 0) {
-        setArticles([]);
-      } else {
-        const formatted: ArticleType[] = res.data.map((a: any) => ({
-          id: a.articleId?.toString() || a._id?.toString() || Math.random().toString(),
-          title: a.title,
-        }));
-        setArticles(formatted);
-      }
+      const allFetchedArticles: any[] = res.data || [];
+
+      const formattedArticles: ArticleType[] = allFetchedArticles.map((a: any) => ({
+        id: a.articleId?.toString() || a._id?.toString() || Math.random().toString(),
+        title: a.title,
+        category: a.category || 'Unknown',
+      }));
+
+      setArticles(formattedArticles);
+
+      // Now dynamically calculate categories from filtered articles
+      const categoryCountMap: { [key: string]: number } = {};
+
+      formattedArticles.forEach((article) => {
+        const cat = article.category || 'Unknown';
+        if (categoryCountMap[cat]) {
+          categoryCountMap[cat]++;
+        } else {
+          categoryCountMap[cat] = 1;
+        }
+      });
+
+      const dynamicCategories: CategoryType[] = Object.keys(categoryCountMap).map((key) => ({
+        category: key,
+        count: categoryCountMap[key],
+      }));
+
+      const totalCount = formattedArticles.length;
+
+      setCategories([{ category: 'All', count: totalCount }, ...dynamicCategories]);
+      setSelectedCategory('All');
+
     } catch (err) {
-      Alert.alert('Error', 'Something went wrong while loading articles');
+      console.error(err);
+      Alert.alert('Error', 'Failed to load data');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    loadCategories();
-  }, [paper]);
+  const getFilteredArticles = () => {
+    if (selectedCategory === 'All') {
+      return articles;
+    }
+    return articles.filter((article) => article.category === selectedCategory);
+  };
 
   useEffect(() => {
-    if (categories.length > 0) {
-      loadArticles();
-    }
-  }, [selectedCategory, categories, selectedDate]);
+    loadArticlesAndCategories();
+  }, [paper, selectedDate]);
 
   const handleArticlePress = (id: string) => {
-    // Update navigation to pass 'selectedDate' along with 'id' and 'paper'
     navigation.navigate('ArticleDetail', { id, paper, date: selectedDate.toString() });
   };
 
@@ -154,7 +131,7 @@ const HomeScreen = () => {
             style={{ width: 150, height: 150 }}
           />
         </View>
-      ) : articles.length === 0 ? (
+      ) : getFilteredArticles().length === 0 ? (
         <View style={styles.noDataContainer}>
           <Text style={styles.noDataText}>No data available for selected date</Text>
         </View>
@@ -166,7 +143,7 @@ const HomeScreen = () => {
             onSelect={setSelectedCategory}
           />
           <ArticleList
-            articles={articles}
+            articles={getFilteredArticles()}
             onSelect={handleArticlePress}
             source={paper}
           />
@@ -190,7 +167,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   noDataContainer: {
-    
     marginTop: 300,
     alignItems: 'center',
     justifyContent: 'center',
