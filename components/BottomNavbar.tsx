@@ -77,10 +77,10 @@ const styles = StyleSheet.create({
   },
   container: {
     backgroundColor: 'white',
-    borderRadius: 20,
-    width: 380,
-    height: 85,
-    padding: 10,
+    borderRadius: 25,
+    width: 370,
+    height: 90,
+    padding: 5,
     marginBottom: 8,
     borderColor: '#050505',
     borderWidth: 3,
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   selectedIcon: {
     borderColor: 'black',
     borderWidth: 3,
-    elevation: 5,
+    elevation: 1,
     shadowColor: 'black',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
