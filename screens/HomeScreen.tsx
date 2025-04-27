@@ -1,5 +1,3 @@
-// src/screens/HomeScreen.tsx
-
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, StyleSheet, Alert, Text, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -26,7 +24,6 @@ const papers = [
   'Economic Times',
   'Bussiness Standard',
 ];
-
 
 const HomeScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -56,7 +53,7 @@ const HomeScreen = () => {
     const categoryCountMap: { [key: string]: number } = {};
 
     articleList.forEach((article) => {
-      const cat = article.category || 'Unknown';
+      const cat = article.category ? article.category.toLowerCase() : 'unknown'; // Normalize category to lowercase
       if (categoryCountMap[cat]) {
         categoryCountMap[cat]++;
       } else {
@@ -99,7 +96,7 @@ const HomeScreen = () => {
           'Economic Times',
           'Bussiness Standard',
         ];
-        
+
         const fetchPromises = papersToFetch.map(async (p) => {
           try {
             const response = await fetchArticlesByPaperAndDate(p, formattedDate);
@@ -144,7 +141,6 @@ const HomeScreen = () => {
       setArticles(formattedArticles);
       setCategories(generateCategories(formattedArticles));
       setSelectedCategory('All');
-
     } catch (err) {
       console.error(err);
       Alert.alert('Error', 'Failed to load data');
@@ -183,7 +179,7 @@ const HomeScreen = () => {
     let filtered = articles;
 
     if (selectedCategory !== 'All') {
-      filtered = articles.filter((article) => article.category === selectedCategory);
+      filtered = articles.filter((article) => article.category.toLowerCase() === selectedCategory.toLowerCase());
     }
 
     return filtered.slice(0, visibleCount);
