@@ -1,7 +1,10 @@
+// components/Header.tsx
+
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { useNavigation } from '@react-navigation/native'; // Added
 
 interface HeaderProps {
   setSelectedDate: React.Dispatch<React.SetStateAction<Date>>;
@@ -10,6 +13,7 @@ interface HeaderProps {
 const Header = ({ setSelectedDate }: HeaderProps) => {
   const [date, setDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
+  const navigation = useNavigation(); // Added
 
   const handleChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     setShowPicker(Platform.OS === 'ios');
@@ -37,12 +41,13 @@ const Header = ({ setSelectedDate }: HeaderProps) => {
 
         <View style={styles.middleContainer}>
           <Text style={styles.title}>
-            News<Text style={{ color: 'red' }}>Up</Text>
+            News
+            <Text style={{ color: 'red' }}>Up</Text> {/* Ensure 'Up' is wrapped in a Text component */}
           </Text>
           <Text style={styles.dateText}>{formatDate(date)}</Text>
         </View>
 
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Profile' as never)}> {/* Updated */}
           <Ionicons name="person-circle-outline" size={45} color="black" />
         </TouchableOpacity>
       </View>
@@ -75,12 +80,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: '#fff',
-  
-    // Remove elevation and add bottom border
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.1)', // light black with opacity for thin line
+    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
   },
-  
   title: {
     fontSize: 28,
     fontWeight: 'bold',

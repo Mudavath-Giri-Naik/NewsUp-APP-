@@ -9,6 +9,7 @@ import { Appearance } from 'react-native';
 import WelcomeScreen from './screens/WelcomeScreen'; // ✅ ADDED: Welcome screen
 import HomeScreen from './screens/HomeScreen';
 import ArticleDetailScreen from './screens/ArticleDetailScreen';
+import ProfileScreen from './screens/profileScreen'; // ✅ ADDED: ProfileScreen import
 
 // Force the system appearance to light (optional)
 Appearance.setColorScheme('light');
@@ -42,6 +43,10 @@ export default function App() {
         <Stack.Screen
           name="ArticleDetail"
           component={ArticleDetailScreen}
+        />
+        <Stack.Screen
+          name="Profile" // ✅ ADDED: Profile screen registration
+          component={ProfileScreen} // ✅ ADDED: ProfileScreen component
         />
       </Stack.Navigator>
     </NavigationContainer>
