@@ -1,8 +1,13 @@
-import React, { useEffect, useState, useCallback } from 'react';
+// File: screens/HomeScreen.tsx
+// NOTE: The "Text strings must be rendered within a <Text>" warning
+// needs to be fixed inside ../components/Header.tsx
+
+import React, { useEffect, useState, useCallback, Dispatch, SetStateAction } from 'react';
 import { View, StyleSheet, Alert, Text, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LottieView from 'lottie-react-native';
-import Header from '../components/Header';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Header from '../components/Header'; // <<<--- ERROR ORIGINATES INSIDE THIS COMPONENT
 import CategoryChips from '../components/CategoryChips';
 import ArticleList from '../components/ArticleList';
 import BottomNavbar from '../components/BottomNavbar';
@@ -12,22 +17,29 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../utils/types';
 import axios from 'axios';
 
+// --- Type Definitions ---
 type CategoryType = { category: string; count: number };
-type ArticleType = { id: string; title: string; category: string; source: string };
+type ArticleType = { id: string; title: string; category: string; source: string; };
+type RawArticleData = {
+  _id?: any; articleId?: number | string; title: string;
+  category?: string;
+  examSpecific?: boolean | undefined;
+  source?: string;
+};
 
-const papers = [
-  'The Hindu',
-  'Times of India',
-  'Hindustan Times',
-  'Exam',
-  'Indian Express',
-  'Economic Times',
-  'Bussiness Standard',
+// --- Constants ---
+const papers: string[] = [
+  'The Hindu', 'Times of India', 'Hindustan Times', 'Exam',
+  'Indian Express', 'Economic Times', 'Bussiness Standard',
+];
+const papersForExamFetch: string[] = [
+  'The Hindu', 'Times of India', 'Hindustan Times',
+  'Indian Express', 'Economic Times', 'Bussiness Standard',
 ];
 
+// --- Component ---
 const HomeScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-
   const [paper, setPaper] = useState('The Hindu');
   const [categories, setCategories] = useState<CategoryType[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -42,229 +54,172 @@ const HomeScreen = () => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
-  const formatDateForAPI = (date: Date) => {
+  const formatDateForAPI = (date: Date): string => {
     const dd = String(date.getDate()).padStart(2, '0');
     const mm = String(date.getMonth() + 1).padStart(2, '0');
     const yyyy = date.getFullYear();
     return `${dd}-${mm}-${yyyy}`;
-  };
-
-  const generateCategories = (articleList: ArticleType[]) => {
+   };
+  const generateCategories = (articleList: ArticleType[]): CategoryType[] => {
     const categoryCountMap: { [key: string]: number } = {};
-
-    articleList.forEach((article) => {
-      const cat = article.category ? article.category.toLowerCase() : 'unknown'; // Normalize category to lowercase
-      if (categoryCountMap[cat]) {
-        categoryCountMap[cat]++;
-      } else {
-        categoryCountMap[cat] = 1;
-      }
-    });
-
-    const dynamicCategories: CategoryType[] = Object.keys(categoryCountMap).map((key) => ({
-      category: key,
-      count: categoryCountMap[key],
-    }));
-
+    articleList.forEach((article) => { const cat = article.category ? article.category.toLowerCase() : 'unknown'; categoryCountMap[cat] = (categoryCountMap[cat] || 0) + 1; });
+    const dynamicCategories: CategoryType[] = Object.entries(categoryCountMap).map(([key, count]) => ({ category: key, count: count, }));
     const totalCount = articleList.length;
-
-    // Sort dynamic categories by count descending
     dynamicCategories.sort((a, b) => b.count - a.count);
-
     return [{ category: 'All', count: totalCount }, ...dynamicCategories];
-  };
+   };
 
-  const loadArticlesAndCategories = async () => {
+  const loadArticlesAndCategories = useCallback(async () => {
+    console.log(`Loading articles for paper: ${paper}, date: ${selectedDate.toDateString()}`);
     try {
       setLoading(true);
-      setArticles([]);
-      setCategories([]);
-      setPage(1);
-      setAllLoaded(false);
-
+      setArticles([]); setCategories([]); setPage(1);
+      setAllLoaded(false); setSelectedCategory('All');
       const formattedDate = formatDateForAPI(selectedDate);
-
-      let allFetchedArticles: any[] = [];
+      let allFetchedArticles: RawArticleData[] = [];
 
       if (paper === 'Exam') {
-        const papersToFetch = [
-          'The Hindu',
-          'Times of India',
-          'Hindustan Times',
-          'Exam',
-          'Indian Express',
-          'Economic Times',
-          'Bussiness Standard',
-        ];
-
-        const fetchPromises = papersToFetch.map(async (p) => {
+        console.log(`Mode: Exam - Fetching across ${papersForExamFetch.length} papers...`);
+        const fetchPromises = papersForExamFetch.map(async (p): Promise<RawArticleData[]> => {
           try {
             const response = await fetchArticlesByPaperAndDate(p, formattedDate);
-            return (response.data || []).map((a: any) => ({
-              ...a,
-              source: p, // Attach source paper manually
-            }));
+            const rawArticles: RawArticleData[] = response?.data || [];
+            // console.log(`[${p}] Received ${rawArticles.length} raw articles.`);
+            const examSpecificArticles = rawArticles.filter((a) => a.examSpecific === true );
+            // console.log(`[${p}] Filtered to ${examSpecificArticles.length} examSpecific articles.`);
+            return examSpecificArticles.map((a) => ({ ...a, source: p, }));
           } catch (err: any) {
-            if (axios.isAxiosError(err) && err.response?.status === 404) {
-              return [];
-            } else {
-              throw err;
-            }
+            if (axios.isAxiosError(err) && err.response?.status === 404) { console.log(`[${p}] 404`); }
+            else { console.error(`[${p}] Error fetching:`, err.message); }
+            return [];
           }
         });
-
         const allResults = await Promise.all(fetchPromises);
         allFetchedArticles = allResults.flat();
+        console.log(`Combined ${allFetchedArticles.length} examSpecific articles.`);
       } else {
+        console.log(`Mode: Single Paper (${paper}) - Fetching...`);
         try {
           const response = await fetchArticlesByPaperAndDate(paper, formattedDate);
-          allFetchedArticles = (response.data || []).map((a: any) => ({
-            ...a,
-            source: paper, // Attach source paper manually
-          }));
+          const rawArticles: RawArticleData[] = response?.data || [];
+          allFetchedArticles = rawArticles.map((a) => ({ ...a, source: paper, }));
+          console.log(`Fetched ${allFetchedArticles.length} from ${paper}.`);
         } catch (err: any) {
-          if (axios.isAxiosError(err) && err.response?.status === 404) {
-            allFetchedArticles = [];
-          } else {
-            throw err;
-          }
+           if (axios.isAxiosError(err) && err.response?.status === 404) { console.log(`[${paper}] 404`); allFetchedArticles = []; }
+           else { console.error(`Error fetching from ${paper}:`, err); throw err; }
         }
       }
 
-      const formattedArticles: ArticleType[] = allFetchedArticles.map((a: any) => ({
-        id: a.articleId?.toString() || a._id?.toString() || Math.random().toString(),
-        title: a.title,
-        category: a.category || 'Unknown',
-        source: a.source || 'Unknown',
+      const formattedArticles: ArticleType[] = allFetchedArticles.map((a) => ({
+        id: a.articleId?.toString() || a._id?.toString() || `${a.source}-${a.title}-${Math.random()}`,
+        title: a.title || 'Untitled', category: a.category || 'Unknown', source: a.source || paper,
       }));
-
+      console.log(`Setting state with ${formattedArticles.length} formatted articles.`);
+      if (formattedArticles.length === 0) { console.warn(`FINAL RESULT: No articles to display.`); }
       setArticles(formattedArticles);
       setCategories(generateCategories(formattedArticles));
-      setSelectedCategory('All');
-    } catch (err) {
-      console.error(err);
-      Alert.alert('Error', 'Failed to load data');
+    } catch (err: any) {
+      console.error("CRITICAL ERROR during article loading:", err);
+      Alert.alert('Error', 'An unexpected error occurred while loading data.');
+      setArticles([]); setCategories([]);
     } finally {
+      console.log("Setting loading false.");
       setLoading(false);
     }
-  };
+  }, [paper, selectedDate]);
 
-  const loadMoreArticles = async () => {
+  const loadMoreArticles = (): void => {
     if (isFetchingMore || allLoaded) return;
-
-    try {
-      setIsFetchingMore(true);
-
-      const nextPage = page + 1;
-      const pageSize = 10;
-      const start = (nextPage - 1) * pageSize;
-      const end = start + pageSize;
-
-      const totalArticles = articles.length;
-
-      if (start >= totalArticles) {
-        setAllLoaded(true);
-      } else {
-        setPage(nextPage);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsFetchingMore(false);
-    }
+    setIsFetchingMore(true);
+    const pageSize = 10; const currentVisibleCount = page * pageSize;
+    if (currentVisibleCount >= articles.length) { setAllLoaded(true); setIsFetchingMore(false); }
+    else { setTimeout(() => { setPage((p) => p + 1); setIsFetchingMore(false); }, 500); }
   };
-
-  const getFilteredArticles = useCallback(() => {
-    const visibleCount = page * 10;
-    let filtered = articles;
-
-    if (selectedCategory !== 'All') {
-      filtered = articles.filter((article) => article.category.toLowerCase() === selectedCategory.toLowerCase());
-    }
-
+  const getFilteredArticles = useCallback((): ArticleType[] => {
+    const visibleCount = page * 10; let filtered = articles;
+    if (selectedCategory !== 'All') { filtered = articles.filter((a) => a.category.toLowerCase() === selectedCategory.toLowerCase()); }
     return filtered.slice(0, visibleCount);
   }, [articles, selectedCategory, page]);
 
   useEffect(() => {
     loadArticlesAndCategories();
-  }, [paper, selectedDate]);
+  }, [loadArticlesAndCategories]);
 
-  useEffect(() => {
-    setCategories(generateCategories(articles));
-  }, [articles]);
-
-  const handleArticlePress = (id: string, source: string) => {
-    navigation.navigate('ArticleDetail', { id, paper: source, date: selectedDate.toString() });
+  const handleArticlePress = (id: string, source: string): void => {
+    navigation.navigate('ArticleDetail', { id: id, paper: source, date: selectedDate.toISOString(), });
   };
+
+  const currentlyDisplayedArticles = getFilteredArticles();
+
+  // Use 'as any' temporarily if needed for TS errors related to component props
+  const HeaderComponent = Header as any;
+  const ArticleListComponent = ArticleList as any;
+  const BottomNavbarComponent = BottomNavbar as any;
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header setSelectedDate={setSelectedDate} />
+      {/* This HeaderComponent is where the warning originates */}
+      <HeaderComponent selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
+
       {loading ? (
-        <View style={styles.loaderContainer}>
-          <LottieView
-            source={require('../assets/funny-loader.json')}
-            autoPlay
-            loop
-            style={{ width: 150, height: 150 }}
-          />
-        </View>
-      ) : getFilteredArticles().length === 0 ? (
+        <View style={styles.loaderContainer}><LottieView source={require('../assets/funny-loader.json')} autoPlay loop style={styles.lottieLoader} /></View>
+      ) : articles.length === 0 ? (
         <View style={styles.noDataContainer}>
-          <Text style={styles.noDataText}>No data available for selected date</Text>
+          <Icon name="file-remove-outline" size={60} color="#adb5bd" />
+          <Text style={styles.noDataText}>No articles found for</Text>
+          <Text style={styles.noDataTextDate}>{selectedDate.toLocaleDateString('en-GB')}</Text>
+          {paper === 'Exam' && <Text style={styles.noDataHint}>(Checked for 'Exam Specific = true')</Text>}
         </View>
       ) : (
         <>
           <CategoryChips
-            categories={categories}
-            selected={selectedCategory}
+            categories={categories} selected={selectedCategory}
             onSelect={(category) => {
-              setSelectedCategory(category);
-              setPage(1);
+              setSelectedCategory(category); setPage(1); setAllLoaded(false);
             }}
           />
-          <ArticleList
-            articles={getFilteredArticles()}
-            onSelect={(id, source) => handleArticlePress(id, source)}
-            onEndReached={loadMoreArticles}
-            ListFooterComponent={
-              isFetchingMore ? (
-                <View style={styles.footerLoader}>
-                  <ActivityIndicator size="small" color="#000" />
-                </View>
-              ) : null
-            }
-          />
+          {currentlyDisplayedArticles.length === 0 && selectedCategory !== 'All' ? (
+              <View style={styles.noDataContainer}>
+                  <Icon name="filter-remove-outline" size={60} color="#adb5bd" />
+                  <Text style={styles.noDataText}>No articles for category:</Text>
+                  <Text style={styles.noDataTextCategory}>{selectedCategory}</Text>
+                  <Text style={styles.noDataTextDate}>on {selectedDate.toLocaleDateString('en-GB')}</Text>
+              </View>
+          ) : (
+             <ArticleListComponent
+                articles={currentlyDisplayedArticles}
+                onSelect={handleArticlePress}
+                onEndReached={loadMoreArticles}
+                onEndReachedThreshold={0.5}
+                ListFooterComponent={
+                  isFetchingMore ? (
+                    <View style={styles.footerLoader}><ActivityIndicator size="small" color="#6c757d" /></View>
+                  ) : null
+                }
+              />
+          )}
         </>
       )}
-      <BottomNavbar selected={paper} onSelect={setPaper} />
+      <BottomNavbarComponent
+        selected={paper}
+        onSelect={setPaper}
+        papers={papers}
+      />
     </SafeAreaView>
   );
 };
 
 export default HomeScreen;
 
+// --- Styles ---
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  loaderContainer: {
-    marginTop: 250,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  noDataContainer: {
-    marginTop: 300,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  noDataText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: 'gray',
-  },
-  footerLoader: {
-    paddingVertical: 20,
-  },
+  container: { flex: 1, backgroundColor: '#f8f9fa', },
+  loaderContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', },
+  lottieLoader: { width: 150, height: 150, },
+  noDataContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, },
+  noDataText: { fontSize: 17, fontWeight: '600', color: '#6c757d', marginTop: 10, textAlign: 'center', },
+  noDataTextCategory: { fontSize: 17, fontWeight: '700', color: '#495057', marginTop: 2, textAlign: 'center', textTransform: 'capitalize', },
+  noDataTextDate: { fontSize: 15, fontWeight: '500', color: '#adb5bd', marginTop: 2, textAlign: 'center', },
+  noDataHint: { fontSize: 13, fontWeight: '400', color: '#adb5bd', marginTop: 5, textAlign: 'center', fontStyle: 'italic'},
+  footerLoader: { paddingVertical: 20, alignItems: 'center', },
 });
