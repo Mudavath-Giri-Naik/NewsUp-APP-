@@ -19,8 +19,8 @@ const papers = [
   { key: 'The Hindu', logo: require('../assets/logos/th.png') },
   { key: 'Times of India', logo: require('../assets/logos/toi.png') },
   { key: 'Hindustan Times', logo: require('../assets/logos/ht.jpg') },
-  { key: 'Exam', logo: require('../assets/logos/pib.jpg') }, // Assuming pib.jpg is the intended logo for Exam
-  { key: 'Indian Express', logo: require('../assets/logos/ie.jpg') },
+  { key: 'Exam', logo: require('../assets/logos/india.jpg') }, // Assuming pib.jpg is the intended logo for Exam
+  { key: 'Indian Express', logo: require('../assets/logos/ie.png') },
   { key: 'Economic Times', logo: require('../assets/logos/et.png') },
   { key: 'Bussiness Standard', logo: require('../assets/logos/bs.png') },
 ];
