@@ -1,51 +1,62 @@
+// src/components/BottomNavbar.tsx
+// This code is correct based on its internal implementation.
+// It defines its own 'papers' list with logos and does not expect 'papers' as a prop.
+
 import React from 'react';
 import { TouchableOpacity, Image, StyleSheet, View, Dimensions, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context'; // Import useSafeAreaInsets
 
+
+// Props type only includes what the component actually uses from its parent
 type Props = {
   selected: string;
   onSelect: (paper: string) => void;
+  // No 'papers' prop is needed here because the list is defined internally
 };
 
-// Paper list - order will be maintained
+// Paper list with logos - defined inside the component
 const papers = [
   { key: 'The Hindu', logo: require('../assets/logos/th.png') },
   { key: 'Times of India', logo: require('../assets/logos/toi.png') },
   { key: 'Hindustan Times', logo: require('../assets/logos/ht.jpg') },
-  { key: 'Exam', logo: require('../assets/logos/pib.jpg') },
+  { key: 'Exam', logo: require('../assets/logos/pib.jpg') }, // Assuming pib.jpg is the intended logo for Exam
   { key: 'Indian Express', logo: require('../assets/logos/ie.jpg') },
   { key: 'Economic Times', logo: require('../assets/logos/et.png') },
   { key: 'Bussiness Standard', logo: require('../assets/logos/bs.png') },
 ];
 
 const BottomNavbar: React.FC<Props> = ({ selected, onSelect }) => {
-  return (
-    <View style={styles.wrapper}>
-      {/* White background behind the navbar */}
-      <View style={styles.background} />
+  const insets = useSafeAreaInsets(); // Get safe area insets for proper padding
 
-      {/* Actual Navbar on top */}
+  return (
+    // Use a wrapper that respects safe area for the background and container
+    <View style={[styles.safeAreaWrapper, { paddingBottom: insets.bottom }]}>
       <View style={styles.container}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.scrollContainer}
         >
+          {/* Map over the *internal* papers constant */}
           {papers.map((paper) => (
             <TouchableOpacity
               key={paper.key}
               onPress={() => onSelect(paper.key)}
               style={styles.iconWrapper}
+              activeOpacity={0.8} // Add feedback on press
             >
               <View
                 style={[
                   styles.iconContainer,
-                  selected === paper.key && styles.selectedIcon,
+                  selected === paper.key && styles.selectedIcon, // Apply selected style
                 ]}
               >
                 <Image
                   source={paper.logo}
                   style={styles.icon}
-                  resizeMode="cover"
+                  // Consider resizeMode="contain" if logos have varying aspect ratios
+                  // and you don't want them stretched/cropped.
+                  resizeMode="contain" // Changed to 'contain' for potentially better logo display
                 />
               </View>
             </TouchableOpacity>
@@ -58,66 +69,69 @@ const BottomNavbar: React.FC<Props> = ({ selected, onSelect }) => {
 
 export default BottomNavbar;
 
-const { width } = Dimensions.get('window');
+const ICON_SIZE = 60; // Define size constants
+const BORDER_WIDTH = 3;
+const NAVBAR_HEIGHT = 80; // Adjusted height
+const NAVBAR_BORDER_RADIUS = 20; // Adjusted radius
 
 const styles = StyleSheet.create({
-  wrapper: {
+  safeAreaWrapper: {
+    // Position absolutely at the bottom
     position: 'absolute',
     bottom: 0,
-    width: '100%',
-    alignItems: 'center',
-  },
-  background: {
-    position: 'absolute',
-    bottom: 0,
-    width: width,
-    height: 100,
+    left: 0,
+    right: 0,
+    // The background color is applied here to cover safe area
     backgroundColor: 'white',
-    zIndex: 0,
+    // Add a top border for visual separation
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
   },
   container: {
-    backgroundColor: 'white',
-    borderRadius: 25,
-    width: 370,
-    height: 90,
-    padding: 5,
-    marginBottom: 8,
-    borderColor: '#050505',
-    borderWidth: 3,
-    justifyContent: 'center',
-    alignItems: 'center',
+    // Let the container manage its height and padding within the safe area wrapper
+    height: NAVBAR_HEIGHT,
     flexDirection: 'row',
-    zIndex: 1,
+    alignItems: 'center', // Vertically center the scrollview/icons
+    paddingHorizontal: 5, // Padding for the scroll view ends
+    marginBottom: 8,
+    // Removed fixed width, absolute positioning, excessive margins/borders from here
   },
   scrollContainer: {
+    // Ensure items are centered vertically within the ScrollView's content area
     alignItems: 'center',
-    paddingHorizontal: 5,
+    paddingHorizontal: 5, // Prevent icons touching the edges
   },
   iconWrapper: {
-    marginHorizontal: 5,
+    // Margin provides spacing between icons
+    marginHorizontal: 8, // Increased spacing slightly
+    // No fixed width/height here, controlled by iconContainer
   },
   iconContainer: {
+    width: ICON_SIZE,
+    height: ICON_SIZE,
+    borderRadius: ICON_SIZE / 2, // Perfect circle
     justifyContent: 'center',
     alignItems: 'center',
-    borderColor: 'transparent',
-    borderWidth: 0,
-    borderRadius: 40,
-    padding: 0,
-    width: 60,
-    height: 60,
+    backgroundColor: '#f0f0f0', // A light background for the circle
+    overflow: 'hidden', // Ensure image stays within bounds
+    // Border is applied conditionally using selectedIcon style
+    borderWidth: BORDER_WIDTH,
+    borderColor: 'transparent', // Default to transparent border
   },
   selectedIcon: {
-    borderColor: 'black',
-    borderWidth: 3,
-    elevation: 1,
-    shadowColor: 'black',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
+    // Apply border styles when selected
+    borderColor: '#000000', // Example: Use a primary color for selected border
+    // Optional: Add shadow for elevation effect (can impact performance)
+    // shadowColor: '#000',
+    // shadowOffset: { width: 0, height: 1 },
+    // shadowOpacity: 0.2,
+    // shadowRadius: 2,
+    // elevation: 3,
   },
   icon: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 30,
+    // Make image slightly smaller than container to prevent border overlap issues
+    width: ICON_SIZE - (BORDER_WIDTH * 2), // Account for border width on both sides
+    height: ICON_SIZE - (BORDER_WIDTH * 2),
+    borderRadius: (ICON_SIZE - (BORDER_WIDTH * 2)) / 2, // Make inner image circular
   },
 });
