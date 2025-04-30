@@ -10,7 +10,7 @@ import WelcomeScreen from './screens/WelcomeScreen'; // ✅ ADDED: Welcome scree
 import HomeScreen from './screens/HomeScreen';
 import ArticleDetailScreen from './screens/ArticleDetailScreen';
 import ProfileScreen from './screens/profileScreen'; // ✅ ADDED: ProfileScreen import
-
+import ResourceDetailScreen from './screens/ResourceDetailScreen';
 // Force the system appearance to light (optional)
 Appearance.setColorScheme('light');
 
@@ -45,8 +45,12 @@ export default function App() {
           component={ArticleDetailScreen}
         />
         <Stack.Screen
-          name="Profile" // ✅ ADDED: Profile screen registration
+          name="Resources" // ✅ ADDED: Profile screen registration
           component={ProfileScreen} // ✅ ADDED: ProfileScreen component
+        />
+        <Stack.Screen
+          name="ResourceDetail" // ✅ ADDED: Profile screen registration
+          component={ResourceDetailScreen} // ✅ ADDED: ProfileScreen component
         />
       </Stack.Navigator>
     </NavigationContainer>
