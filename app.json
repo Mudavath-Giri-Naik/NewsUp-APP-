@@ -20,7 +20,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.naik_giri.NewsUp"
+      "package": "com.girinaik.NewsUpApp"
     },
     "web": {
       "favicon": "./assets/favicon.png"

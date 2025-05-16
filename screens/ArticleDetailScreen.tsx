@@ -31,7 +31,7 @@ const COLORS = {
   textMuted: '#AEAEB2',    // Even Lighter Gray (iOS system gray 3)
 
   background: '#FFFFFF', // White background
-  backgroundSubtle: '#F2F2F7', // Off-white/Very Light Gray (iOS grouped background)
+  backgroundSubtle: '#FFFFFF', // Off-white/Very Light Gray (iOS grouped background)
   backgroundElevated: '#FFFFFF', // White for cards/elevated sections
 
   border: '#D1D1D6', // Light gray border (iOS Separator)
@@ -643,11 +643,6 @@ const styles = StyleSheet.create({
     paddingBottom: 1, // Prevents margin collapse issues sometimes
   },
   examContentArea: {
-    // backgroundColor: COLORS.backgroundSubtle, // Subtle background for exam area
-    // borderRadius: 12, // Optional: Rounded corners for the whole exam section
-    // padding: 15, // Optional: Padding around the exam sections
-    // borderWidth: 1,
-    // borderColor: COLORS.border,
   },
   contentBlock: { // Wrapper for each section (heading + content)
     marginBottom: 35, // Increased spacing between sections
